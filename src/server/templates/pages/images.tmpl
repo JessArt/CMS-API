@@ -1,0 +1,30 @@
+{{ define "content" }}
+
+<div class="media-item-new">
+  <a href="/new" class="btn btn-primary media-item-button">
+    Upload new image
+  </a>
+
+  <div>
+    In the future here would be search and filters (when where would be a lot of images!)
+  </div>
+</div>
+
+<ul class="media-list">
+  {{ range $key, $value := .images }}
+     <li class="media media-item">
+       <a class="media" href="/images/{{ $value.id }}">
+         <div class="media-left">
+           <img class="media-object media-item-image" src="{{ $value.url }}" />
+         </div>
+         <div class="media-body">
+           <h4 class="media-heading">{{ $value.title }}</h4>
+           {{ $value.description }}
+         </div>
+       </a>
+     </li>
+  {{ end }}
+
+</ul>
+
+{{ end }}

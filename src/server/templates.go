@@ -16,7 +16,7 @@ func constructPath(path string) string {
   }
   fmt.Println(dir)
   fmt.Println(dir)
-  return fmt.Sprintf("%s/%s", dir, path)
+  return fmt.Sprintf("%s/%s/%s", dir, "src/server/", path)
 }
 
 func addTemplate(templates multitemplate.Render, name string, template string) {

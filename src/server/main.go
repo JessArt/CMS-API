@@ -119,7 +119,7 @@ func main() {
 
   r.GET("/images/:id", func(c *gin.Context) {
     checkLogin(c)
-    stmt, err := db.Prepare("select small_url, id, title, description, type, date, location from images where id =?;")
+    stmt, err := db.Prepare("select small_url, original_url, id, title, description, type, date, location from images where id =?;")
 
     if err != nil {
       fmt.Print(err.Error())
@@ -136,6 +136,7 @@ func main() {
 
     var (
       url string
+      bigURL string
       imageId string
       title string
       description string
@@ -146,7 +147,7 @@ func main() {
 
     defer rows.Close()
     for rows.Next() {
-      err := rows.Scan(&url, &imageId, &title, &description, &image_type, &date, &location)
+      err := rows.Scan(&url, &bigURL, &imageId, &title, &description, &image_type, &date, &location)
       if err != nil {
         fmt.Print(err.Error())
       }
@@ -154,6 +155,7 @@ func main() {
       c.HTML(http.StatusOK, "form", gin.H{
         "id": imageId,
         "url": url,
+        "big_url": bigURL,
         "title": "My title",
         "isPhoto": image_type == "photo",
         "isArt": image_type == "art",
@@ -233,7 +235,12 @@ func main() {
       bigImageFilename := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
       originalImageFilename := saveFile(*folderFlag, filename + ".jpg", imageFile)
 
-      stmt, err := db.Prepare("insert into images (small_url, big_url, original_url, title, type, description, date, location) values(?,?,?,?,?,?,?,?);")
+      stmt, err := db.Prepare(`
+        INSERT INTO images
+        (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height)
+        values(?,?,?,?,?,?,?,?,?,?);
+      `)
+
       if err != nil {
         fmt.Print(err.Error())
       }
@@ -244,7 +251,18 @@ func main() {
       date := c.PostForm("date")
       location := c.PostForm("location")
 
-      res, err := stmt.Exec(prepareURL(smallImageFilename), prepareURL(bigImageFilename), prepareURL(originalImageFilename), title, typeField, description, date, location)
+      res, err := stmt.Exec(
+        prepareURL(smallImageFilename),
+        prepareURL(bigImageFilename),
+        prepareURL(originalImageFilename),
+        title,
+        typeField,
+        description,
+        date,
+        location,
+        b.Max.X,
+        b.Max.Y,
+      )
 
       if err != nil {
         fmt.Print(err.Error())
@@ -270,7 +288,7 @@ func main() {
     getImagesAPI(db, c)
   })
 
-  r.Static("/assets", "./static")
+  r.Static("/assets", constructPath("static"))
 
   r.Run(":4002")
 }
