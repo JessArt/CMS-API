@@ -29,9 +29,12 @@ func addTemplate(templates multitemplate.Render, name string, template string) {
 func createTemplates() multitemplate.Render {
   templates := multitemplate.New()
   addTemplate(templates, "form", "template")
-  addTemplate(templates, "index", "images")
+  addTemplate(templates, "index", "index")
+  addTemplate(templates, "images", "images")
   addTemplate(templates, "success", "success")
   addTemplate(templates, "login", "login")
+  addTemplate(templates, "article", "article")
+  addTemplate(templates, "articles", "articles")
 
   return templates
 }

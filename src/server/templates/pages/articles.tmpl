@@ -1,12 +1,12 @@
 {{ define "content" }}
 
-<a href="/articles">
-  Go to the articles!
+<a href="/images">
+  Go to the images!
 </a>
 
 <div class="media-item-new">
-  <a href="/new" class="btn btn-primary media-item-button">
-    Upload new image
+  <a href="/new/article" class="btn btn-primary media-item-button">
+    Write new article
   </a>
 
   <div>
@@ -15,15 +15,16 @@
 </div>
 
 <ul class="media-list">
-  {{ range $key, $value := .images }}
+  {{ range $key, $value := .articles }}
      <li class="media media-item">
-       <a class="media" href="/images/{{ $value.id }}">
-         <div class="media-left">
-           <img class="media-object media-item-image" src="{{ $value.url }}" />
-         </div>
+       <a class="media" href="/articles/{{ $value.id }}">
          <div class="media-body">
            <h4 class="media-heading">{{ $value.title }}</h4>
-           {{ $value.description }}
+           {{ $value.subtitle }}
+           <div>
+             {{ $value.country }}
+             {{ $value.city }}
+           </div>
          </div>
        </a>
      </li>

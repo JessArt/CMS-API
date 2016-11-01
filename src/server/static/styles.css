@@ -1,3 +1,12 @@
+.medium-editor {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  min-height: 200px;
+  font-size: 16px;
+  padding: 5px; }
+  .medium-editor:focus {
+    outline: 0; }
+
 
 .image-uploader {
   display: -ms-flexbox;

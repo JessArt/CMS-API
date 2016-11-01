@@ -62,6 +62,23 @@ func main() {
     loginHandler(db, c)
   })
 
+  r.GET("/articles", func(c *gin.Context) {
+    checkLogin(c)
+    getArticlesHandler(db, c)
+  })
+
+  r.GET("/new/article", getArticleHandler)
+  r.GET("/articles/:id", func(c *gin.Context) {
+    checkLogin(c)
+    id := c.Param("id")
+    editArticleHandler(db, c, id)
+  })
+
+  r.POST("/article", func(c *gin.Context) {
+    checkLogin(c)
+    saveArticle(db, c)
+  })
+
   r.GET("/new", func(c *gin.Context) {
     checkLogin(c)
     tags := getTags(db)
@@ -74,6 +91,14 @@ func main() {
   })
 
   r.GET("/", func(c *gin.Context) {
+    checkLogin(c)
+
+    c.HTML(http.StatusOK, "index", gin.H{
+      "title": "Main page",
+    })
+  })
+
+  r.GET("/images", func(c *gin.Context) {
     checkLogin(c)
     stmt, err := db.Prepare("select title, id, description, small_url from images;")
 
@@ -112,7 +137,7 @@ func main() {
       })
     }
 
-    c.HTML(http.StatusOK, "index", gin.H{
+    c.HTML(http.StatusOK, "images", gin.H{
       "images": titles,
     })
   })
