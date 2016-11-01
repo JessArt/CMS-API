@@ -265,14 +265,17 @@ $(function() {
   ];
 
   var $country = $('#country')
-  var $res = $country.select2({
+  var $element = $country.select2({
     data: countries.map(function(country) { return { id: country.code, text: country.name }; })
   });
 
   var id = $country.attr('data-selected-id');
-  if (id) {
-    $res.select2('val', id);
-  }
+  countries.forEach(function(item) {
+    var option = new Option(item.name, item.code, true, id === item.code ? true : false);
+    $element.append(option);
+  });
+
+  $element.trigger('change');
 
   var states = [
     {

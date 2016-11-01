@@ -53,3 +53,15 @@
 .media-item-image {
   width: 120px; }
 
+.media-list .media-item {
+  padding: 15px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin: 5px;
+  vertical-align: top;
+  background: rgba(170, 170, 170, 0.2);
+  transition: all 0.2s; }
+  .media-list .media-item:hover {
+    background: rgba(170, 170, 170, 0.6); }
+

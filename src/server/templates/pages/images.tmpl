@@ -1,8 +1,10 @@
 {{ define "content" }}
 
-<a href="/articles">
-  Go to the articles!
-</a>
+<ul class="nav nav-pills">
+  <li role="presentation"><a href="/">Home</a></li>
+  <li role="presentation" class="active"><a href="/images">Images</a></li>
+  <li role="presentation"><a href="/articles">Articles</a></li>
+</ul>
 
 <div class="media-item-new">
   <a href="/new" class="btn btn-primary media-item-button">
@@ -14,7 +16,7 @@
   </div>
 </div>
 
-<ul class="media-list">
+<ul class="media-list images-list">
   {{ range $key, $value := .images }}
      <li class="media media-item">
        <a class="media" href="/images/{{ $value.id }}">
