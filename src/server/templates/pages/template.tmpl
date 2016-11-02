@@ -1,8 +1,8 @@
 {{ define "content" }}
 
 <div class="">
-  <a href="/" class="back-link">
-    Back to the list
+  <a href="/images" class="back-link">
+    Back to the list of images
   </a>
   <h1 class="text-center">
     Upload an image!
@@ -36,6 +36,14 @@
               {{ if .isArt }}
                 selected
               {{ end }}>Art</option>
+            <option value="craft"
+              {{ if .isCraft }}
+                selected
+              {{ end }}>Craft</option>
+            <option value="postcard"
+              {{ if .isPostcard }}
+                selected
+              {{ end }}>Postcard</option>
             <option value="other"
               {{ if .isOther }}
                 selected
