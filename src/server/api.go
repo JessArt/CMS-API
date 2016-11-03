@@ -37,6 +37,7 @@ func getImagesAPI(db *sql.DB, c *gin.Context) {
     SELECT id, title, description, small_url, big_url, original_url, date, location, original_width, original_height
     FROM images
     WHERE type = ?
+    ORDER BY id DESC
   `)
   defer stmt.Close()
   if err != nil {
