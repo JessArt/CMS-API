@@ -11,12 +11,12 @@ gulp.task('styles', function() {
       cascade: false
     }))
     .pipe(concat('styles.css'))
-    .pipe(gulp.dest('./src/server/static'));
+    .pipe(gulp.dest('./static'));
 });
 
 gulp.task('js', function() {
   gulp.src('src/client/js/**/*.js')
-    .pipe(gulp.dest('./src/server/static'));
+    .pipe(gulp.dest('./static'));
 });
 
 gulp.task('default',function() {

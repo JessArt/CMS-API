@@ -1,0 +1,36 @@
+{{ define "content" }}
+
+<ul class="nav nav-pills">
+  <li role="presentation"><a href="/">Home</a></li>
+  <li role="presentation"><a href="/images">Images</a></li>
+  <li role="presentation" class="active"><a href="/articles">Articles</a></li>
+</ul>
+
+<div class="media-item-new">
+  <a href="/new/article" class="btn btn-primary media-item-button">
+    Write new article
+  </a>
+
+  <div>
+    In the future here would be search and filters (when where would be a lot of images!)
+  </div>
+</div>
+
+<ul class="media-list">
+  {{ range $key, $value := .articles }}
+     <li class="media media-item">
+       <a class="media" href="/articles/{{ $value.ID }}">
+         <div class="media-body">
+           <h4 class="media-heading">{{ $value.Title }}</h4>
+           {{ $value.Subtitle }}
+           <div>
+             {{ $value.Country }}
+             {{ $value.City }}
+           </div>
+         </div>
+       </a>
+     </li>
+  {{ end }}
+</ul>
+
+{{ end }}

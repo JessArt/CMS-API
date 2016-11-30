@@ -1,0 +1,135 @@
+{{ define "content" }}
+
+<div class="">
+  <a href="/images" class="back-link">
+    Back to the list of images
+  </a>
+  <h1 class="text-center">
+    Upload an image!
+  </h1>
+  {{ if .error }}
+  <div class="alert alert-warning" role="alert">
+    {{ .error }}
+  </div>
+  {{ end }}
+
+  <form class="col-md-8 col-md-offset-2" action="/image" method="POST" enctype="multipart/form-data">
+    <div class="image-uploader">
+      <div class="image-info">
+        <input type="hidden" name="id" value="{{ .Image.ID }}" />
+        <div class="form-group">
+          <label>
+            Title
+          </label>
+          <input class="form-control" type="text" name="title" value="{{ .Image.Title }}" />
+        </div>
+        <div class="form-group">
+          <label>
+            Type
+          </label>
+          <select class="form-control" name="type">
+            <option value="photo"
+              {{ if .isPhoto }}
+                selected
+              {{ end }}>Photography</option>
+            <option value="art"
+              {{ if .isArt }}
+                selected
+              {{ end }}>Art</option>
+            <option value="craft"
+              {{ if .isCraft }}
+                selected
+              {{ end }}>Craft</option>
+            <option value="postcard"
+              {{ if .isPostcard }}
+                selected
+              {{ end }}>Postcard</option>
+            <option value="other"
+              {{ if .isOther }}
+                selected
+              {{ end }}>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            Description
+          </label>
+          <textarea rows="5" class="form-control" name="description">{{ .Image.Description }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>
+            Tags
+          </label>
+          <select multiple="multiple" id="tags" name="tags" class="form-control">
+            {{ if .tags }}
+                {{ range $key, $value := .tags }}
+                  <option value="{{ $value.id }}"
+                    {{ if $.currentTags }}
+                      {{range $key, $value2 := $.currentTags}}
+                        {{ if eq $value.id $key }}
+                          selected
+                        {{ end }}
+                      {{end}}
+                    {{ end }}
+                  >
+                    {{ $value.name }}
+                  </option>
+                {{ end }}
+            {{ end }}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            Date
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            name="date"
+            value="{{ .Image.Date }}"
+            placeholder="YYYY | YYYY-MM | YYYY-MM-DD" />
+        </div>
+        <div class="form-group">
+          <label>
+            Location
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            name="location"
+            value="{{ .Image.Location }}"
+            placeholder="in plain english" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg">
+          Submit
+        </button>
+      </div>
+      <div class="image-container">
+        <img class="image-source" id="uploaded-image" />
+        {{ if .Image.URL }}
+          <a href="{{ .Image.URL }}" class="fancybox" rel="gallery" title="">
+            <img class="image-source" src="{{ .Image.OriginalURL }}" />
+          </a>
+          <p class="help-block text-center">
+            Click to enlarge image!
+          </p>
+        {{ else }}
+          <div>
+            Upload image!
+          </div>
+        {{ end }}
+        <div class="form-group">
+          {{ if .showImage }}
+            <label>Image upload</label>
+            <input name="image" type="file" id="upload" />
+            <p class="help-block">Some stupid help text.</p>
+          {{ end }}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/assets/new-image.js"></script>
+
+{{ end }}

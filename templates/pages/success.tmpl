@@ -1,0 +1,25 @@
+{{ define "content" }}
+
+<div class="md-col-6 md-col-offset-3">
+  <div class="alert alert-success" role="alert">
+    {{ .message }}
+  </div>
+  <ul class="list-group">
+    <li class="list-group-item">
+      <a href="/">
+        To the main page
+      </a>
+    </li>
+    <li class="list-group-item">
+      <a href="/images">
+        To the list of the images
+      </a>
+    </li>
+    <li class="list-group-item">
+      <a href="/articles">
+        To the list of the articles
+      </a>
+    </li>
+  </ul>
+</div>
+{{ end }}

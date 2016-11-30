@@ -1,5 +1,5 @@
 .DS_Store
 login.go
 build.sh
-/server
+server
 node_modules

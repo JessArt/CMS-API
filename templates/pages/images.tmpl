@@ -1,0 +1,54 @@
+{{ define "content" }}
+
+<ul class="nav nav-pills">
+  <li role="presentation"><a href="/">Home</a></li>
+  <li role="presentation" class="active"><a href="/images">Images</a></li>
+  <li role="presentation"><a href="/articles">Articles</a></li>
+</ul>
+
+<div class="media-item-new">
+  <a href="/new" class="btn btn-primary media-item-button">
+    Upload new image
+  </a>
+
+  <div class="media-options">
+    <a href="/images" class="media-options-link">
+      Show all images
+    </a>
+    <a href="/images?type=art" class="media-options-link">
+      Show only art
+    </a>
+    <a href="/images?type=photo" class="media-options-link">
+      Show only photos
+    </a>
+    <a href="/images?type=craft" class="media-options-link">
+      Show only craft
+    </a>
+  </div>
+</div>
+
+<h1>
+  {{ if .type }}
+    {{ .type }} Images
+  {{ else }}
+    All images
+  {{ end }}
+</h1>
+
+<ul class="media-list images-list">
+  {{ range $key, $value := .images }}
+     <li class="media media-item">
+       <a class="media" href="/images/{{ $value.ID }}">
+         <div class="media-left">
+           <img class="media-object media-item-image" src="{{ $value.URL }}" />
+         </div>
+         <div class="media-body">
+           <h4 class="media-heading">{{ $value.Title }}</h4>
+           {{ $value.Description }}
+         </div>
+       </a>
+     </li>
+  {{ end }}
+</ul>
+
+{{ end }}
