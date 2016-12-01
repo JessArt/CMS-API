@@ -4,9 +4,14 @@
   <a href="/images" class="back-link">
     Back to the list of images
   </a>
-  <h1 class="text-center">
-    Upload an image!
-  </h1>
+
+    <h1 class="text-center">
+      {{ if .Image.ID }}
+        Update the image!
+      {{ else }}
+        Upload an image!
+      {{ end }}
+    </h1>
   {{ if .error }}
   <div class="alert alert-warning" role="alert">
     {{ .error }}
@@ -58,6 +63,16 @@
         </div>
         <div class="form-group">
           <label>
+            Keywords
+          </label>
+          <input type="text" class="form-control" name="keywords" value="{{ .Image.Keywords }}" />
+          <p class="help-block">
+            For SEO. Should be words (or 2–3 words, but better smaller), separated by commas, up to 8. For instance:
+            jess zaikova, art, acryl, dog, painted dog, acryl dog paint
+          </p>
+        </div>
+        <div class="form-group">
+          <label>
             Tags
           </label>
           <select multiple="multiple" id="tags" name="tags" class="form-control">
@@ -106,8 +121,8 @@
       </div>
       <div class="image-container">
         <img class="image-source" id="uploaded-image" />
-        {{ if .Image.URL }}
-          <a href="{{ .Image.URL }}" class="fancybox" rel="gallery" title="">
+        {{ if .Image.SmallURL }}
+          <a href="{{ .Image.SmallURL }}" class="fancybox" rel="gallery" title="">
             <img class="image-source" src="{{ .Image.OriginalURL }}" />
           </a>
           <p class="help-block text-center">

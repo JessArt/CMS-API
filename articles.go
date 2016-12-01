@@ -13,6 +13,7 @@ func getArticlesHandler(sess *dbr.Session, c *gin.Context) {
     Subtitle string
     Country string
     City string
+    Keywords string
   }
   var articles []Article
   sess.Select("id, title, subtitle").From("articles").Load(&articles)
@@ -37,11 +38,13 @@ func editArticleHandler(sess *dbr.Session, c *gin.Context, id string) {
     Country string
     City string
     Text string
+    Keywords string
   }
 
   var article Article
 
-  sess.Select("id, title, subtitle, cover, country, city, text").From("articles").Where("id = ?", id).Load(&article)
+  sess.Select("id, title, subtitle, cover, country, city, text, keywords").
+    From("articles").Where("id = ?", id).Load(&article)
 
   c.HTML(http.StatusOK, "article", gin.H{
     "article": article,
@@ -57,6 +60,7 @@ func saveArticle(sess *dbr.Session, c *gin.Context) {
   country := c.PostForm("country")
   city := c.PostForm("city")
   text := c.PostForm("text")
+  keywords := c.PostForm("keywords")
 
   if id != "" {
     sess.Update("articles").
@@ -66,6 +70,7 @@ func saveArticle(sess *dbr.Session, c *gin.Context) {
       Set("country", country).
       Set("city", city).
       Set("text", text).
+      Set("keywords", keywords).
       Where("id = ?", id).Exec()
 
     c.HTML(http.StatusOK, "success", gin.H{
@@ -79,12 +84,13 @@ func saveArticle(sess *dbr.Session, c *gin.Context) {
       country string
       city string
       text string
+      keywords string
     }
 
-    article := Article{title: title, subtitle: subtitle, cover: cover, country: country, city: city, text: text}
+    article := Article{title: title, subtitle: subtitle, cover: cover, country: country, city: city, text: text, keywords: keywords}
 
     sess.InsertInto("articles").
-      Columns("title, subtitle, cover, country, city, text").
+      Columns("title, subtitle, cover, country, city, text, keywords").
       Record(article)
 
     c.HTML(http.StatusOK, "success", gin.H{

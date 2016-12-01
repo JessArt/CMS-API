@@ -52,6 +52,7 @@ func main() {
 
   sess := conn.NewSession(nil)
   fixLinks(sess)
+  fixTags(sess)
 
   defer db.Close()
 
@@ -143,6 +144,7 @@ func main() {
       Type string
       Date string
       Location string
+      Keywords string
     }
 
     var image Image
@@ -153,7 +155,7 @@ func main() {
       "description",
       "small_url",
       "original_url",
-      "type", "date", "location",
+      "type", "date", "location", "keywords",
     ).From("images").Where("id = ?", id).Load(&image)
 
     tagsMap := getImageTags(sess, id)
@@ -179,7 +181,7 @@ func main() {
     file, _, err := c.Request.FormFile("image")
     if err != nil {
       if id := c.PostForm("id"); id != "" {
-        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=? WHERE id=?;")
+        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=? WHERE id=?;")
         if err != nil {
           fmt.Print(err.Error())
         }
@@ -189,8 +191,9 @@ func main() {
         description := c.PostForm("description")
         date := c.PostForm("date")
         location := c.PostForm("location")
+        keywords := c.PostForm("keywords")
 
-        _, err = stmt.Exec(title, typeField, description, date, location, id)
+        _, err = stmt.Exec(title, typeField, description, date, location, keywords, id)
 
         if err != nil {
           fmt.Print(err.Error())
@@ -210,16 +213,19 @@ func main() {
         c.HTML(http.StatusOK, "form", gin.H{
           "title": "My title",
           "error": "Please, upload the image",
+          "Image": gin.H{
+            "Title": c.PostForm("title"),
+            "Description": c.PostForm("description"),
+            "Type": imageType,
+            "Date": c.PostForm("date"),
+            "Location": c.PostForm("location"),
+            "Keywords": c.PostForm("keywords"),
+          },
           "isPhoto": imageType == "photo",
           "isArt": imageType == "art",
           "isCraft": imageType == "craft",
           "isPostcard": imageType == "postcard",
           "isOther": imageType == "other",
-          "image_title": c.PostForm("title"),
-          "description": c.PostForm("description"),
-          "imageType": imageType,
-          "date": c.PostForm("date"),
-          "location": c.PostForm("location"),
           "tags": getTags(db),
           "currentTags": currentTags,
         })
@@ -239,7 +245,7 @@ func main() {
 
       stmt, err := db.Prepare(`
         INSERT INTO images
-        (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height)
+        (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height, keywords)
         values(?,?,?,?,?,?,?,?,?,?);
       `)
 
@@ -252,6 +258,7 @@ func main() {
       description := c.PostForm("description")
       date := c.PostForm("date")
       location := c.PostForm("location")
+      keywords := c.PostForm("keywords")
 
       res, err := stmt.Exec(
         prepareURL(smallImageFilename),
@@ -264,6 +271,7 @@ func main() {
         location,
         b.Max.X,
         b.Max.Y,
+        keywords,
       )
 
       if err != nil {

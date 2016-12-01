@@ -10,11 +10,12 @@
 
 .image-uploader {
   display: -ms-flexbox;
-  display: flex; }
+  display: flex;
+  overflow: hidden; }
 
 .image-info {
-  -ms-flex: 1 0 auto;
-  flex: 1 0 auto; }
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto; }
 
 .image-container {
   -ms-flex-positive: 0;

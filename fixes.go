@@ -36,3 +36,30 @@ func fixLinks(sess *dbr.Session) {
       Where("id = ?", image.ID).Exec()
   }
 }
+
+func fixTags(sess *dbr.Session) {
+  type Tag struct {
+    Name string
+    Number int
+  }
+  var tags []Tag
+
+  sess.SelectBySql("SELECT `name`, COUNT(*) as `number` from `tags` GROUP BY `name` HAVING `number` > 1").Load(&tags)
+
+  fmt.Println("==============")
+  fmt.Println(len(tags))
+  fmt.Println("==============")
+
+  for _, tag := range tags {
+    var similarTags []string
+    sess.Select("id").From("tags").Where("name = ?", tag.Name).Load(&similarTags)
+
+    first := similarTags[0]
+
+    fmt.Println(first, similarTags[1:], tag.Name)
+
+    sess.Update("tags_images").Set("tag_id", first).Where("tag_id IN ?", similarTags[1:]).Exec()
+
+    sess.DeleteFrom("tags").Where("id IN ?", similarTags[1:]).Exec()
+  }
+}
