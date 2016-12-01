@@ -86,6 +86,12 @@ func main() {
     saveArticle(sess, c)
   })
 
+  r.GET("/subscribers", func(c *gin.Context) {
+    checkLogin(c)
+    sess := conn.NewSession(nil)
+    listSubscribers(sess, c)
+  })
+
   r.GET("/new", func(c *gin.Context) {
     checkLogin(c)
     tags := getTags(db)
@@ -303,6 +309,32 @@ func main() {
   r.GET("/v1/api/articles", func(c *gin.Context) {
     sess := conn.NewSession(nil)
     getArticlesAPI(sess, c)
+  })
+
+  r.POST("/v1/api/subscribe", func(c *gin.Context) {
+    type Subscriber struct {
+      Email string `json:"email"`
+    }
+
+    var subscriber Subscriber
+    if c.BindJSON(&subscriber) == nil {
+      email := subscriber.Email
+      sess := conn.NewSession(nil)
+      addSubscription(sess, c, email)
+    }
+  })
+
+  r.DELETE("/v1/api/subscribe", func(c *gin.Context) {
+    type Subscriber struct {
+      Email string `json:"email"`
+    }
+
+    var subscriber Subscriber
+    if c.BindJSON(&subscriber) == nil {
+      email := subscriber.Email
+      sess := conn.NewSession(nil)
+      removeSubscription(sess, c, email)
+    }
   })
 
   r.Static("/assets", constructPath("static"))

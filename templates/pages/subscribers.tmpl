@@ -1,0 +1,23 @@
+{{ define "content" }}
+
+<ul class="nav nav-pills">
+  <li role="presentation"><a href="/">Home</a></li>
+  <li role="presentation"><a href="/images">Images</a></li>
+  <li role="presentation"><a href="/articles">Articles</a></li>
+  <li role="presentation" class="active"><a href="/subscribers">Subscribers</a></li>
+</ul>
+
+<div>
+  <h1>
+    All your subscribers!
+  </h1>
+  <ol class="list-group">
+    {{ range $key, $value := .subscribers }}
+      <li class="list-group-item">
+        {{ $value.email }}
+      </li>
+    {{ end }}
+  </ol>
+</div>
+
+{{ end }}

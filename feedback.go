@@ -5,16 +5,18 @@ import (
   "net/http"
   "gopkg.in/gomail.v2"
   "github.com/gin-gonic/gin"
+  "github.com/gocraft/dbr"
 )
-
-type Feedback struct {
-    Name     string `form:"name" json:"name" binding:"required"`
-    Email    string `form:"email" json:"email"`
-    Message  string `form:"message" json:"message" binding:"required"`
-}
 
 func handleFeedback(c *gin.Context) {
   setCORSHeaders(c)
+
+  type Feedback struct {
+      Name     string `form:"name" json:"name" binding:"required"`
+      Email    string `form:"email" json:"email"`
+      Message  string `form:"message" json:"message" binding:"required"`
+  }
+
   var feedback Feedback
 
   if c.BindJSON(&feedback) == nil {
@@ -41,4 +43,32 @@ func handleFeedback(c *gin.Context) {
     fmt.Println("Something is wrong...")
     fmt.Println(feedback)
   }
+}
+
+func listSubscribers(sess *dbr.Session, c *gin.Context) {
+  type Subscriber struct {
+    email string
+  }
+
+  var subscribers []Subscriber
+
+  sess.Select("email").From("subscriptions").Load(&subscribers)
+
+  c.HTML(http.StatusOK, "subscribers", gin.H{
+    "title": "Subscribers",
+    "subscribers": subscribers,
+  })
+}
+
+func addSubscription(sess *dbr.Session, c *gin.Context, email string) {
+  setCORSHeaders(c)
+  sess.InsertInto("subscriptions").Columns("email").Values(email).Exec()
+  c.JSON(http.StatusCreated, nil)
+}
+
+func removeSubscription(sess *dbr.Session, c *gin.Context, email string) {
+  setCORSHeaders(c)
+  sess.DeleteFrom("subscriptions").Where("email = ?", email).Exec()
+
+  c.JSON(http.StatusNoContent, nil)
 }

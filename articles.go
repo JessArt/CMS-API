@@ -77,21 +77,9 @@ func saveArticle(sess *dbr.Session, c *gin.Context) {
       "message": "Your article was updated successfully!",
     })
   } else {
-    type Article struct {
-      title string
-      subtitle string
-      cover string
-      country string
-      city string
-      text string
-      keywords string
-    }
-
-    article := Article{title: title, subtitle: subtitle, cover: cover, country: country, city: city, text: text, keywords: keywords}
-
     sess.InsertInto("articles").
-      Columns("title, subtitle, cover, country, city, text, keywords").
-      Record(article)
+      Columns("title", "subtitle", "cover", "country", "city", "text", "keywords").
+      Values(title, subtitle, cover, country, city, text, keywords).Exec()
 
     c.HTML(http.StatusOK, "success", gin.H{
       "message": "Your article was created successfully!",
