@@ -306,6 +306,11 @@ func main() {
     getImagesAPI(db, c)
   })
 
+  r.GET("/v2/api/images", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    getImagesAPI2(sess, c)
+  })
+
   r.GET("/v1/api/articles", func(c *gin.Context) {
     sess := conn.NewSession(nil)
     getArticlesAPI(sess, c)

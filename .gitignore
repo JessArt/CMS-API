@@ -2,4 +2,5 @@
 login.go
 build.sh
 server
+jess-cms
 node_modules

@@ -23,7 +23,6 @@ func preflightHandler (c *gin.Context) {
 func getImagesAPI(db *sql.DB, c *gin.Context) {
   setCORSHeaders(c)
   imageType := c.DefaultQuery("type", "art")
-
   stmt, err := db.Prepare(`
     SELECT id, title, description, small_url, big_url, original_url, date, location, original_width, original_height
     FROM images
@@ -79,6 +78,48 @@ func getImagesAPI(db *sql.DB, c *gin.Context) {
   c.JSON(http.StatusOK, content)
 }
 
+func getImagesAPI2(sess *dbr.Session, c *gin.Context) {
+  setCORSHeaders(c)
+  imageType := c.DefaultQuery("type", "art")
+
+  type Tag struct {
+    Name string
+  }
+
+  type Image struct {
+    Title string
+    ID string
+    ImageType string
+    Description dbr.NullString
+    SmallURL string `db:"small_url"`
+    BigURL string `db:"big_url"`
+    OriginalURL string `db:"original_url"`
+    Date dbr.NullString
+    Location dbr.NullString
+    Keywords dbr.NullString
+    OriginalWidth dbr.NullInt64 `db:"original_width"`
+    OriginalHeight dbr.NullInt64 `db:"original_height"`
+    Tags []string
+  }
+
+  var images []Image
+  imagesWithTags := make([]Image, 0)
+  sess.Select("*").From("images").Where("type = ?", imageType).OrderDir("id", false).Load(&images)
+  for _, image := range images {
+    var tags []Tag
+    sess.Select("*").From("tags_images").Join("tags", "tags_images.tag_id = tags.id").Where("tags_images.image_id = ?", image.ID).Load(&tags)
+    plainTags := make([]string, 0)
+    for _, tag := range tags {
+      fmt.Println(tag.Name)
+      plainTags = append(plainTags, tag.Name)
+    }
+    image.Tags = plainTags
+    imagesWithTags = append(imagesWithTags, image)
+  }
+
+  c.JSON(http.StatusOK, imagesWithTags)
+}
+
 func getArticlesAPI(sess *dbr.Session, c *gin.Context) {
   setCORSHeaders(c)
 
@@ -90,6 +131,7 @@ func getArticlesAPI(sess *dbr.Session, c *gin.Context) {
     Country string
     City string
     Text string
+    Keywords string
   }
 
   var articles []Article
