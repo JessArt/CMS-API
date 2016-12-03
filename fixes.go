@@ -3,7 +3,15 @@ package main
 import (
   "fmt"
   "strings"
+  "net/http"
+  "regexp"
+  "image"
+  "github.com/anthonynsimon/bild/transform"
+  "github.com/satori/go.uuid"
   "github.com/gocraft/dbr"
+
+  _ "image/jpeg"
+  _ "image/png"
 )
 
 func fixURL(url string) string {
@@ -61,5 +69,60 @@ func fixTags(sess *dbr.Session) {
     sess.Update("tags_images").Set("tag_id", first).Where("tag_id IN ?", similarTags[1:]).Exec()
 
     sess.DeleteFrom("tags").Where("id IN ?", similarTags[1:]).Exec()
+  }
+}
+
+func fixExternalImages(sess *dbr.Session, folderFlag *string) {
+  type Article struct {
+    ID string
+    Text string
+  }
+  // load all articles
+  var articles []Article
+  sess.Select("id, text").From("articles").Load(&articles)
+  // iterate through them and get their text
+  for _, article := range articles {
+    // find <img src="$EXT" />, where $EXT leads to other articles
+    // yes, I know the zen – https://blog.codinghorror.com/parsing-html-the-cthulhu-way/
+    r, _ := regexp.Compile("<img(.+?)src=\"(.+?)\"")
+    res := r.FindAllStringSubmatch(article.Text, -1)
+
+    type Change struct {
+      Old string
+      New string
+    }
+
+    var changes = make([]Change, 0)
+
+    for _, value := range res {
+      filename := uuid.NewV4().String()
+      url := value[2]
+      response, _ := http.Get(url)
+
+      defer response.Body.Close()
+      imageFile, _, _ := image.Decode(response.Body)
+
+      b := imageFile.Bounds()
+      fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
+      var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
+      // compress them to 1200px width and save to the static folder
+      largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
+      finalLastName := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
+      fmt.Println(finalLastName, largeImage.Bounds())
+
+      newURL := prepareURL(finalLastName)
+
+      changes = append(changes, Change{ Old: url, New: newURL })
+    }
+
+    articleText := article.Text
+    // change link to the internal one
+    if len(changes) > 0 {
+      for _, change := range changes {
+        articleText = strings.Replace(articleText, change.Old, change.New, 1)
+      }
+
+      sess.Update("articles").Set("text", articleText).Where("id = ?", article.ID).Exec()
+    }
   }
 }

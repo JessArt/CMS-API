@@ -53,6 +53,7 @@ func main() {
   sess := conn.NewSession(nil)
   fixLinks(sess)
   fixTags(sess)
+  fixExternalImages(sess, folderFlag)
 
   defer db.Close()
 
