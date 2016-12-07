@@ -134,10 +134,10 @@
           </div>
         {{ end }}
         <div class="form-group">
-          {{ if .showImage }}
-            <label>Image upload</label>
-            <input name="image" type="file" id="upload" />
-            <p class="help-block">Some stupid help text.</p>
+          <label>Image upload</label>
+          <input name="image" type="file" id="upload" />
+          {{ if .Image.ID }}
+            <p class="help-block">Previous image will be removed.</p>
           {{ end }}
         </div>
       </div>

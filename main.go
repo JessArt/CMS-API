@@ -53,7 +53,7 @@ func main() {
   sess := conn.NewSession(nil)
   fixLinks(sess)
   fixTags(sess)
-  fixExternalImages(sess, folderFlag)
+  // fixExternalImages(sess, folderFlag)
 
   defer db.Close()
 
@@ -84,7 +84,7 @@ func main() {
   r.POST("/article", func(c *gin.Context) {
     sess := conn.NewSession(nil)
     checkLogin(c)
-    saveArticle(sess, c)
+    saveArticle(sess, c, folderFlag)
   })
 
   r.GET("/subscribers", func(c *gin.Context) {
@@ -238,68 +238,120 @@ func main() {
         })
       }
     } else {
-      filename := uuid.NewV4().String()
-      imageFile, _, _ := image.Decode(file)
-      b := imageFile.Bounds()
-      fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
-      var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
-      smallImage := transform.Resize(imageFile, 500, int(500/imageRatio), transform.Linear)
-      largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
+      if id := c.PostForm("id"); id != "" {
+        fmt.Println("UPDATEING IMAGE!!")
+        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=?, small_url=?, big_url=?, original_url=? WHERE id=?;")
+        if err != nil {
+          fmt.Print(err.Error())
+        }
 
-      smallImageFilename := saveFile(*folderFlag, filename + "_500.jpg", smallImage)
-      bigImageFilename := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
-      originalImageFilename := saveFile(*folderFlag, filename + ".jpg", imageFile)
+        filename := uuid.NewV4().String()
+        imageFile, _, _ := image.Decode(file)
+        b := imageFile.Bounds()
+        fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
+        var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
+        smallImage := transform.Resize(imageFile, 500, int(500/imageRatio), transform.Linear)
+        largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
 
-      stmt, err := db.Prepare(`
-        INSERT INTO images
-        (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height, keywords)
-        values(?,?,?,?,?,?,?,?,?,?);
-      `)
+        smallImageFilename := saveFile(*folderFlag, filename + "_500.jpg", smallImage)
+        bigImageFilename := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
+        originalImageFilename := saveFile(*folderFlag, filename + ".jpg", imageFile)
 
-      if err != nil {
-        fmt.Print(err.Error())
+        fmt.Println(filename, smallImageFilename)
+
+        title := c.PostForm("title")
+        typeField := c.PostForm("type")
+        description := c.PostForm("description")
+        date := c.PostForm("date")
+        location := c.PostForm("location")
+        keywords := c.PostForm("keywords")
+
+        _, err = stmt.Exec(
+          title,
+          typeField,
+          description,
+          date,
+          location,
+          keywords,
+          prepareURL(smallImageFilename),
+          prepareURL(bigImageFilename),
+          prepareURL(originalImageFilename),
+          id,
+        )
+
+        if err != nil {
+          fmt.Print(err.Error())
+        }
+
+        updateImageTagsRelation(db, tags, id)
+
+        c.HTML(http.StatusOK, "success", gin.H{
+          "message": fmt.Sprintf("Image %s was successfully updated", title),
+        })
+      } else {
+        filename := uuid.NewV4().String()
+        imageFile, _, _ := image.Decode(file)
+        b := imageFile.Bounds()
+        fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
+        var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
+        smallImage := transform.Resize(imageFile, 500, int(500/imageRatio), transform.Linear)
+        largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
+
+        smallImageFilename := saveFile(*folderFlag, filename + "_500.jpg", smallImage)
+        bigImageFilename := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
+        originalImageFilename := saveFile(*folderFlag, filename + ".jpg", imageFile)
+
+        stmt, err := db.Prepare(`
+          INSERT INTO images
+          (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height, keywords)
+          values(?,?,?,?,?,?,?,?,?,?, ?);
+        `)
+
+        if err != nil {
+          fmt.Print(err.Error())
+        }
+
+        title := c.PostForm("title")
+        typeField := c.PostForm("type")
+        description := c.PostForm("description")
+        date := c.PostForm("date")
+        location := c.PostForm("location")
+        keywords := c.PostForm("keywords")
+
+        res, err := stmt.Exec(
+          prepareURL(smallImageFilename),
+          prepareURL(bigImageFilename),
+          prepareURL(originalImageFilename),
+          title,
+          typeField,
+          description,
+          date,
+          location,
+          b.Max.X,
+          b.Max.Y,
+          keywords,
+        )
+
+        if err != nil {
+          fmt.Print(err.Error())
+        }
+
+        imageID, err := res.LastInsertId()
+
+        if err != nil {
+          fmt.Println(err)
+        }
+
+        createImageTagsRelation(db, tags, strconv.FormatInt(imageID, 10))
+
+        c.HTML(http.StatusOK, "success", gin.H{
+          "message": "Image was successfully created",
+        })
       }
-
-      title := c.PostForm("title")
-      typeField := c.PostForm("type")
-      description := c.PostForm("description")
-      date := c.PostForm("date")
-      location := c.PostForm("location")
-      keywords := c.PostForm("keywords")
-
-      res, err := stmt.Exec(
-        prepareURL(smallImageFilename),
-        prepareURL(bigImageFilename),
-        prepareURL(originalImageFilename),
-        title,
-        typeField,
-        description,
-        date,
-        location,
-        b.Max.X,
-        b.Max.Y,
-        keywords,
-      )
-
-      if err != nil {
-        fmt.Print(err.Error())
-      }
-
-      imageID, err := res.LastInsertId()
-
-      if err != nil {
-        fmt.Println(err)
-      }
-
-      createImageTagsRelation(db, tags, strconv.FormatInt(imageID, 10))
-
-      c.HTML(http.StatusOK, "success", gin.H{
-        "message": "Image was successfully created",
-      })
     }
   })
 
-  r.OPTIONS("/v1/api/*action", preflightHandler)
+  r.OPTIONS("/:version/api/*action", preflightHandler)
 
   r.POST("/v1/api/feedback", handleFeedback)
 

@@ -89,7 +89,7 @@ func getImagesAPI2(sess *dbr.Session, c *gin.Context) {
   type Image struct {
     Title string
     ID string
-    ImageType string
+    Type string `db:"type"`
     Description dbr.NullString
     SmallURL string `db:"small_url"`
     BigURL string `db:"big_url"`
@@ -125,13 +125,13 @@ func getArticlesAPI(sess *dbr.Session, c *gin.Context) {
 
   type Article struct {
     ID string
-    Title string
-    Subtitle string
-    Cover string
-    Country string
-    City string
-    Text string
-    Keywords string
+    Title dbr.NullString
+    Subtitle dbr.NullString
+    Cover dbr.NullString
+    Country dbr.NullString
+    City dbr.NullString
+    Text dbr.NullString
+    Keywords dbr.NullString
   }
 
   var articles []Article

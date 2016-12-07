@@ -14,7 +14,7 @@
   <ol class="list-group">
     {{ range $key, $value := .subscribers }}
       <li class="list-group-item">
-        {{ $value.email }}
+        {{ $value }}
       </li>
     {{ end }}
   </ol>

@@ -13,7 +13,6 @@ func getArticlesHandler(sess *dbr.Session, c *gin.Context) {
     Subtitle string
     Country string
     City string
-    Keywords string
   }
   var articles []Article
   sess.Select("id, title, subtitle").From("articles").Load(&articles)
@@ -51,7 +50,7 @@ func editArticleHandler(sess *dbr.Session, c *gin.Context, id string) {
   })
 }
 
-func saveArticle(sess *dbr.Session, c *gin.Context) {
+func saveArticle(sess *dbr.Session, c *gin.Context, folderFlag *string) {
   id := c.PostForm("id")
 
   title := c.PostForm("title")
@@ -59,7 +58,7 @@ func saveArticle(sess *dbr.Session, c *gin.Context) {
   cover := c.PostForm("cover")
   country := c.PostForm("country")
   city := c.PostForm("city")
-  text := c.PostForm("text")
+  text, _ := fixText(c.PostForm("text"), folderFlag)
   keywords := c.PostForm("keywords")
 
   if id != "" {

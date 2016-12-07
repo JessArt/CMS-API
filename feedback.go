@@ -47,16 +47,23 @@ func handleFeedback(c *gin.Context) {
 
 func listSubscribers(sess *dbr.Session, c *gin.Context) {
   type Subscriber struct {
-    email string
+    Email dbr.NullString
   }
 
   var subscribers []Subscriber
 
   sess.Select("email").From("subscriptions").Load(&subscribers)
 
+  vsf := make([]string, 0)
+  for _, v := range subscribers {
+    if v.Email.Valid && v.Email.String != "" {
+      vsf = append(vsf, v.Email.String)
+    }
+  }
+
   c.HTML(http.StatusOK, "subscribers", gin.H{
     "title": "Subscribers",
-    "subscribers": subscribers,
+    "subscribers": vsf,
   })
 }
 

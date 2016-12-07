@@ -72,31 +72,34 @@ func fixTags(sess *dbr.Session) {
   }
 }
 
-func fixExternalImages(sess *dbr.Session, folderFlag *string) {
-  type Article struct {
-    ID string
-    Text string
+func fixText(text string, folderFlag *string) (string, int) {
+  // find <img src="$EXT" />, where $EXT leads to other articles
+  // yes, I know the zen – https://blog.codinghorror.com/parsing-html-the-cthulhu-way/
+  r, _ := regexp.Compile("<img(.+?)src=\"(.+?)\"")
+  res := r.FindAllStringSubmatch(text, -1)
+
+  type Change struct {
+    Old string
+    New string
   }
-  // load all articles
-  var articles []Article
-  sess.Select("id, text").From("articles").Load(&articles)
-  // iterate through them and get their text
-  for _, article := range articles {
-    // find <img src="$EXT" />, where $EXT leads to other articles
-    // yes, I know the zen – https://blog.codinghorror.com/parsing-html-the-cthulhu-way/
-    r, _ := regexp.Compile("<img(.+?)src=\"(.+?)\"")
-    res := r.FindAllStringSubmatch(article.Text, -1)
 
-    type Change struct {
-      Old string
-      New string
-    }
+  var changes = make([]Change, 0)
 
-    var changes = make([]Change, 0)
+  for _, value := range res {
+    filename := uuid.NewV4().String()
+    url := value[2]
 
-    for _, value := range res {
-      filename := uuid.NewV4().String()
-      url := value[2]
+    hasHTTP := strings.HasPrefix(url, "http://static.jess.gallery")
+    hasHTTPS := strings.HasPrefix(url, "https://static.jess.gallery")
+    alreadyFixed := strings.HasPrefix(url, "//static.jess.gallery")
+
+    if hasHTTP {
+      newURL := strings.Replace(url, "http://static.jess.gallery", "//static.jess.gallery", 1)
+      changes = append(changes, Change{ Old: url, New: newURL })
+    } else if hasHTTPS {
+      newURL := strings.Replace(url, "https://static.jess.gallery", "//static.jess.gallery", 1)
+      changes = append(changes, Change{ Old: url, New: newURL })
+    } else if alreadyFixed != true {
       response, _ := http.Get(url)
 
       defer response.Body.Close()
@@ -114,15 +117,33 @@ func fixExternalImages(sess *dbr.Session, folderFlag *string) {
 
       changes = append(changes, Change{ Old: url, New: newURL })
     }
+  }
 
-    articleText := article.Text
-    // change link to the internal one
-    if len(changes) > 0 {
-      for _, change := range changes {
-        articleText = strings.Replace(articleText, change.Old, change.New, 1)
-      }
+  articleText := text
+  // change link to the internal one
+  if len(changes) > 0 {
+    for _, change := range changes {
+      articleText = strings.Replace(articleText, change.Old, change.New, 1)
+    }
+  }
 
-      sess.Update("articles").Set("text", articleText).Where("id = ?", article.ID).Exec()
+  return articleText, len(changes)
+}
+
+func fixExternalImages(sess *dbr.Session, folderFlag *string) {
+  type Article struct {
+    ID string
+    Text string
+  }
+  // load all articles
+  var articles []Article
+  sess.Select("id, text").From("articles").Load(&articles)
+  // iterate through them and get their text
+  for _, article := range articles {
+    newText, numberOfChanges := fixText(article.Text, folderFlag)
+
+    if numberOfChanges > 0 {
+      sess.Update("articles").Set("text", newText).Where("id = ?", article.ID).Exec()
     }
   }
 }
