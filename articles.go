@@ -61,6 +61,14 @@ func saveArticle(sess *dbr.Session, c *gin.Context, folderFlag *string) {
   text, _ := fixText(c.PostForm("text"), folderFlag)
   keywords := c.PostForm("keywords")
 
+  if cover != "" {
+    newImage := fixExternalImage(cover, folderFlag)
+
+    if newImage.Result == true {
+      cover = "https:" + newImage.New
+    }
+  }
+
   if id != "" {
     sess.Update("articles").
       Set("title", title).

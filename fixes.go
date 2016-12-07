@@ -72,50 +72,61 @@ func fixTags(sess *dbr.Session) {
   }
 }
 
+type Change struct {
+  Old string
+  New string
+  Result bool
+}
+
+func fixExternalImage(url string, folderFlag *string) Change {
+  filename := uuid.NewV4().String()
+
+  hasHTTP := strings.HasPrefix(url, "http://static.jess.gallery")
+  hasHTTPS := strings.HasPrefix(url, "https://static.jess.gallery")
+  alreadyFixed := strings.HasPrefix(url, "//static.jess.gallery")
+
+  if hasHTTP {
+    newURL := strings.Replace(url, "http://static.jess.gallery", "//static.jess.gallery", 1)
+    return Change{ Old: url, New: newURL, Result: true }
+  } else if hasHTTPS {
+    newURL := strings.Replace(url, "https://static.jess.gallery", "//static.jess.gallery", 1)
+    return Change{ Old: url, New: newURL, Result: true }
+  } else if alreadyFixed != true {
+    response, _ := http.Get(url)
+
+    defer response.Body.Close()
+    imageFile, _, _ := image.Decode(response.Body)
+
+    b := imageFile.Bounds()
+    fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
+    var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
+    // compress them to 1200px width and save to the static folder
+    largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
+    finalLastName := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
+    fmt.Println(finalLastName, largeImage.Bounds())
+
+    newURL := prepareURL(finalLastName)
+
+    return Change{ Old: url, New: newURL, Result: true }
+  }
+
+  return Change{ Result: false }
+}
+
 func fixText(text string, folderFlag *string) (string, int) {
   // find <img src="$EXT" />, where $EXT leads to other articles
   // yes, I know the zen – https://blog.codinghorror.com/parsing-html-the-cthulhu-way/
   r, _ := regexp.Compile("<img(.+?)src=\"(.+?)\"")
   res := r.FindAllStringSubmatch(text, -1)
 
-  type Change struct {
-    Old string
-    New string
-  }
-
   var changes = make([]Change, 0)
 
   for _, value := range res {
-    filename := uuid.NewV4().String()
     url := value[2]
+    change := fixExternalImage(url, folderFlag)
 
-    hasHTTP := strings.HasPrefix(url, "http://static.jess.gallery")
-    hasHTTPS := strings.HasPrefix(url, "https://static.jess.gallery")
-    alreadyFixed := strings.HasPrefix(url, "//static.jess.gallery")
-
-    if hasHTTP {
-      newURL := strings.Replace(url, "http://static.jess.gallery", "//static.jess.gallery", 1)
-      changes = append(changes, Change{ Old: url, New: newURL })
-    } else if hasHTTPS {
-      newURL := strings.Replace(url, "https://static.jess.gallery", "//static.jess.gallery", 1)
-      changes = append(changes, Change{ Old: url, New: newURL })
-    } else if alreadyFixed != true {
-      response, _ := http.Get(url)
-
-      defer response.Body.Close()
-      imageFile, _, _ := image.Decode(response.Body)
-
-      b := imageFile.Bounds()
-      fmt.Println(b.Max.X, b.Max.Y, b.Max.X/b.Max.Y)
-      var imageRatio = float64(b.Max.X) / float64(b.Max.Y)
-      // compress them to 1200px width and save to the static folder
-      largeImage := transform.Resize(imageFile, 1200, int(1200/imageRatio), transform.Linear)
-      finalLastName := saveFile(*folderFlag, filename + "_1200.jpg", largeImage)
-      fmt.Println(finalLastName, largeImage.Bounds())
-
-      newURL := prepareURL(finalLastName)
-
-      changes = append(changes, Change{ Old: url, New: newURL })
+    if change.Result == true {
+      changes = append(changes, change)
     }
   }
 
