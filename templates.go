@@ -36,6 +36,8 @@ func createTemplates() multitemplate.Render {
   addTemplate(templates, "article", "article")
   addTemplate(templates, "articles", "articles")
   addTemplate(templates, "subscribers", "subscribers")
+  addTemplate(templates, "stories", "stories")
+  addTemplate(templates, "story", "story")
 
   return templates
 }

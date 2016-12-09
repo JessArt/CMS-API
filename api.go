@@ -135,7 +135,7 @@ func getArticlesAPI(sess *dbr.Session, c *gin.Context) {
   }
 
   var articles []Article
-  sess.Select("*").From("articles").Load(&articles)
+  sess.Select("*").From("articles").OrderDir("id", false).Load(&articles)
 
   c.JSON(http.StatusOK, articles)
 }

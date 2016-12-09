@@ -1,5 +1,24 @@
 {{ define "content" }}
 
+<script>
+  var DATA = JSON.parse({{ .json }})
+</script>
+
+<h1 class="text-center">
+  Story writing
+</h1>
+<div>
+  <a href="/stories" class="back-link">
+    Back to the list of stories
+  </a>
+</div>
+
+<div id="app">
+  <story-form></story-form>
+</div>
+
+<script src="https://unpkg.com/superagent/superagent.js"></script>
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="/assets/story.js"></script>
 
 {{ end }}

@@ -1,0 +1,88 @@
+.image-picker
+  position: fixed
+  top: 0
+  left: 0
+  bottom: 0
+  right: 0
+  background: rgba(0, 0, 0, 0.9)
+  display: flex
+  justify-content: center
+
+  &--content
+    background: #fff
+    padding: 30px
+    height: 85vh
+    top: 5vh
+    width: 90vw
+    overflow-y: scroll
+    position: relative
+
+  &--search
+    position: absolute
+    top: 0
+    left: 0
+    padding: 20px
+    width: 100%
+    z-index: 2
+    background: #ccc
+
+  &--close
+    position: absolute
+    right: 5px
+    top: 5px
+    font-size: 20px
+    cursor: pointer
+
+  &--item
+    border: 1px solid gray
+    padding: 10px
+    transition: all 0.2s
+    cursor: pointer
+
+    &:hover
+      background: #ddd
+
+  &--image
+    max-width: 200px
+    max-height: 150px
+
+.story-image
+  margin-top: 40px
+  padding: 15px
+  background: #eee
+
+  &--image
+    max-height: 200px
+    display: block
+    margin: 10px 0
+
+  &--arrows
+    position: absolute
+    margin-left: -60px
+
+  &--up
+    width: 0
+    height: 0
+    border-left: 20px solid transparent
+    border-right: 20px solid transparent
+    border-bottom: 20px solid black
+    margin-bottom: 10px
+    cursor: pointer
+    transition: all 0.2s
+    opacity: 0.5
+
+    &:hover
+      opacity: 1
+
+  &--down
+    width: 0
+    height: 0
+    border-left: 20px solid transparent
+    border-right: 20px solid transparent
+    border-top: 20px solid black
+    cursor: pointer
+    transition: all 0.2s
+    opacity: 0.5
+
+    &:hover
+      opacity: 1

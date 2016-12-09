@@ -67,6 +67,27 @@ func main() {
     loginHandler(db, c)
   })
 
+  r.POST("/story", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    checkLogin(c)
+    saveStory(sess, c)
+  })
+
+  r.GET("/stories/:id", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    checkLogin(c)
+    id := c.Param("id")
+    editStoryHandler(sess, c, id)
+  })
+
+  r.GET("/stories", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    checkLogin(c)
+    listStories(sess, c)
+  })
+
+  r.GET("/new/story", getStoryHandler)
+
   r.GET("/articles", func(c *gin.Context) {
     sess := conn.NewSession(nil)
     checkLogin(c)
@@ -130,7 +151,7 @@ func main() {
       builder.Where("type = ?", imageType)
     }
 
-    builder.Load(&images)
+    builder.OrderDir("id", false).Load(&images)
     c.HTML(http.StatusOK, "images", gin.H{
       "type": imageType,
       "images": images,
