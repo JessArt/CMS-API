@@ -173,18 +173,13 @@ func main() {
       Date string
       Location string
       Keywords string
+      MetaTitle string `db:"meta_title"`
+      MetaDescription string `db:"meta_description"`
     }
 
     var image Image
 
-    sess.Select(
-      "id",
-      "title",
-      "description",
-      "small_url",
-      "original_url",
-      "type", "date", "location", "keywords",
-    ).From("images").Where("id = ?", id).Load(&image)
+    sess.Select("*").From("images").Where("id = ?", id).Load(&image)
 
     tagsMap := getImageTags(sess, id)
     fmt.Println(tagsMap)
@@ -209,7 +204,7 @@ func main() {
     file, _, err := c.Request.FormFile("image")
     if err != nil {
       if id := c.PostForm("id"); id != "" {
-        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=? WHERE id=?;")
+        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=?, meta_title=?, meta_description=? WHERE id=?;")
         if err != nil {
           fmt.Print(err.Error())
         }
@@ -220,8 +215,10 @@ func main() {
         date := c.PostForm("date")
         location := c.PostForm("location")
         keywords := c.PostForm("keywords")
+        metaTitle := c.PostForm("metaTitle")
+        metaDescription := c.PostForm("metaDescription")
 
-        _, err = stmt.Exec(title, typeField, description, date, location, keywords, id)
+        _, err = stmt.Exec(title, typeField, description, date, location, keywords, metaTitle, metaDescription, id)
 
         if err != nil {
           fmt.Print(err.Error())
@@ -248,6 +245,8 @@ func main() {
             "Date": c.PostForm("date"),
             "Location": c.PostForm("location"),
             "Keywords": c.PostForm("keywords"),
+            "MetaTitle": c.PostForm("metaTitle"),
+            "MetaDescription": c.PostForm("metaDescription"),
           },
           "isPhoto": imageType == "photo",
           "isArt": imageType == "art",
@@ -261,7 +260,7 @@ func main() {
     } else {
       if id := c.PostForm("id"); id != "" {
         fmt.Println("UPDATEING IMAGE!!")
-        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=?, small_url=?, big_url=?, original_url=? WHERE id=?;")
+        stmt, err := db.Prepare("UPDATE images SET title=?, type=?, description=?, date=?, location=?, keywords=?, small_url=?, big_url=?, original_url=?, meta_title=?, meta_description=? WHERE id=?;")
         if err != nil {
           fmt.Print(err.Error())
         }
@@ -286,6 +285,8 @@ func main() {
         date := c.PostForm("date")
         location := c.PostForm("location")
         keywords := c.PostForm("keywords")
+        metaTitle := c.PostForm("metaTitle")
+        metaDescription := c.PostForm("metaDescription")
 
         _, err = stmt.Exec(
           title,
@@ -297,6 +298,8 @@ func main() {
           prepareURL(smallImageFilename),
           prepareURL(bigImageFilename),
           prepareURL(originalImageFilename),
+          metaTitle,
+          metaDescription,
           id,
         )
 
@@ -324,8 +327,8 @@ func main() {
 
         stmt, err := db.Prepare(`
           INSERT INTO images
-          (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height, keywords)
-          values(?,?,?,?,?,?,?,?,?,?, ?);
+          (small_url, big_url, original_url, title, type, description, date, location, original_width, original_height, keywords, meta_title, meta_description)
+          values(?,?,?,?,?,?,?,?,?,?,?,?,?);
         `)
 
         if err != nil {
@@ -338,6 +341,8 @@ func main() {
         date := c.PostForm("date")
         location := c.PostForm("location")
         keywords := c.PostForm("keywords")
+        metaTitle := c.PostForm("metaTitle")
+        metaDescription := c.PostForm("metaDescription")
 
         res, err := stmt.Exec(
           prepareURL(smallImageFilename),
@@ -351,6 +356,8 @@ func main() {
           b.Max.X,
           b.Max.Y,
           keywords,
+          metaTitle,
+          metaDescription,
         )
 
         if err != nil {
@@ -373,6 +380,17 @@ func main() {
   })
 
   r.OPTIONS("/:version/api/*action", preflightHandler)
+
+  r.GET("/v1/api/stories", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    getStoriesAPI(sess, c)
+  })
+
+  r.GET("/v1/api/stories/:id", func(c *gin.Context) {
+    sess := conn.NewSession(nil)
+    id := c.Param("id")
+    getStoryAPI(sess, c, id)
+  })
 
   r.POST("/v1/api/feedback", handleFeedback)
 

@@ -24,7 +24,7 @@ func getImagesAPI(db *sql.DB, c *gin.Context) {
   setCORSHeaders(c)
   imageType := c.DefaultQuery("type", "art")
   stmt, err := db.Prepare(`
-    SELECT id, title, description, small_url, big_url, original_url, date, location, original_width, original_height
+    SELECT id, title, description, small_url, big_url, original_url, date, location, original_width, original_height, meta_title, meta_description
     FROM images
     WHERE type = ?
     ORDER BY id DESC
@@ -47,13 +47,14 @@ func getImagesAPI(db *sql.DB, c *gin.Context) {
     location string
     originalWidth int
     originalHeight int
+    metaTitle string
+    metaDescription string
   )
 
   defer rows.Close()
   content := make([]gin.H, 0)
-  var counter int
   for rows.Next() {
-    err := rows.Scan(&id, &title, &description, &smallURL, &bigURL, &originalURL, &date, &location, &originalWidth, &originalHeight)
+    err := rows.Scan(&id, &title, &description, &smallURL, &bigURL, &originalURL, &date, &location, &originalWidth, &originalHeight, &metaTitle, &metaDescription)
     if err != nil {
       fmt.Print(err.Error())
     }
@@ -70,9 +71,9 @@ func getImagesAPI(db *sql.DB, c *gin.Context) {
       "location": location,
       "originalWidth": originalWidth,
       "originalHeight": originalHeight,
+      "metaTitle": metaTitle,
+      "metaDescription": metaDescription,
     })
-
-    counter = counter + 1
   }
 
   c.JSON(http.StatusOK, content)
@@ -99,6 +100,8 @@ func getImagesAPI2(sess *dbr.Session, c *gin.Context) {
     Keywords dbr.NullString
     OriginalWidth dbr.NullInt64 `db:"original_width"`
     OriginalHeight dbr.NullInt64 `db:"original_height"`
+    MetaTitle dbr.NullString `db:"meta_title"`
+    MetaDescription dbr.NullString `db:"meta_description"`
     Tags []string
   }
 
@@ -130,8 +133,10 @@ func getArticlesAPI(sess *dbr.Session, c *gin.Context) {
     Cover dbr.NullString
     Country dbr.NullString
     City dbr.NullString
-    Text dbr.NullString
     Keywords dbr.NullString
+    MetaTitle dbr.NullString `db:"meta_title"`
+    MetaDescription dbr.NullString `db:"meta_description"`
+    Text dbr.NullString
   }
 
   var articles []Article

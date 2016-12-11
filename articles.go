@@ -38,12 +38,13 @@ func editArticleHandler(sess *dbr.Session, c *gin.Context, id string) {
     City string
     Text string
     Keywords string
+    MetaTitle string `db:"meta_title"`
+    MetaDescription string `db:"meta_description"`
   }
 
   var article Article
 
-  sess.Select("id, title, subtitle, cover, country, city, text, keywords").
-    From("articles").Where("id = ?", id).Load(&article)
+  sess.Select("*").From("articles").Where("id = ?", id).Load(&article)
 
   c.HTML(http.StatusOK, "article", gin.H{
     "article": article,
@@ -60,6 +61,8 @@ func saveArticle(sess *dbr.Session, c *gin.Context, folderFlag *string) {
   city := c.PostForm("city")
   text, _ := fixText(c.PostForm("text"), folderFlag)
   keywords := c.PostForm("keywords")
+  metaTitle := c.PostForm("metaTitle")
+  metaDescription := c.PostForm("metaDescription")
 
   if cover != "" {
     newImage := fixExternalImage(cover, folderFlag)
@@ -78,6 +81,8 @@ func saveArticle(sess *dbr.Session, c *gin.Context, folderFlag *string) {
       Set("city", city).
       Set("text", text).
       Set("keywords", keywords).
+      Set("meta_title", metaTitle).
+      Set("meta_description", metaDescription).
       Where("id = ?", id).Exec()
 
     c.HTML(http.StatusOK, "success", gin.H{
@@ -85,8 +90,8 @@ func saveArticle(sess *dbr.Session, c *gin.Context, folderFlag *string) {
     })
   } else {
     sess.InsertInto("articles").
-      Columns("title", "subtitle", "cover", "country", "city", "text", "keywords").
-      Values(title, subtitle, cover, country, city, text, keywords).Exec()
+      Columns("title", "subtitle", "cover", "country", "city", "text", "keywords", "meta_title", "meta_description").
+      Values(title, subtitle, cover, country, city, text, keywords, metaTitle, metaDescription).Exec()
 
     c.HTML(http.StatusOK, "success", gin.H{
       "message": "Your article was created successfully!",

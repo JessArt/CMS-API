@@ -8,6 +8,58 @@ import (
   "net/http"
 )
 
+func getStoriesAPI(sess *dbr.Session, c *gin.Context) {
+  setCORSHeaders(c)
+  type Story struct {
+    ID string
+    Title string
+    Subtitle string
+    Cover string
+  }
+
+  var stories []Story
+
+  sess.Select("*").From("stories").Load(&stories)
+
+  c.JSON(http.StatusOK, stories)
+}
+
+func getStoryAPI(sess *dbr.Session, c *gin.Context, id string) {
+  setCORSHeaders(c)
+  type Image struct {
+    ID string
+    ImageID string
+    Title string
+    Description string
+    Cover string
+    Link string
+  }
+
+  type Story struct {
+    ID string
+    Title string
+    Subtitle string
+    Description string
+    Cover string
+    Keywords string `db:"meta_keywords"`
+    MetaTitle string `db:"meta_title"`
+    MetaDescription string `db:"meta_description"`
+    Images []Image
+  }
+
+  var story Story
+
+  sess.Select("*").From("stories").Where("id=?", id).Load(&story)
+
+  var images []Image
+
+  sess.Select("*").From("stories_images").Where("story_id=?", id).OrderBy("sort").Load(&images)
+
+  story.Images = images
+
+  c.JSON(http.StatusOK, story)
+}
+
 func listStories(sess *dbr.Session, c *gin.Context) {
   type Story struct {
     ID string
@@ -50,6 +102,7 @@ func editStoryHandler(sess *dbr.Session, c *gin.Context, id string) {
     Description string
     Cover string
     Keywords string `db:"meta_keywords"`
+    MetaTitle string `db:"meta_title"`
     MetaDescription string `db:"meta_description"`
     Images []Image
   }
@@ -89,6 +142,7 @@ func saveStory(sess *dbr.Session, c *gin.Context) {
     Description  string `form:"password" json:"description" binding:"required"`
     Cover string `json:"cover"`
     Keywords string `json:"keywords"`
+    MetaTitle string `json:"metaTitle"`
     MetaDescription string `json:"metaDescription"`
     Images []Image `json:"images"`
   }
@@ -105,6 +159,7 @@ func saveStory(sess *dbr.Session, c *gin.Context) {
       Set("cover", json.Cover).
       Set("description", json.Description).
       Set("meta_keywords", json.Keywords).
+      Set("meta_title", json.MetaTitle).
       Set("meta_description", json.MetaDescription).
       Where("id = ?", json.ID.String).Exec()
 
@@ -136,8 +191,8 @@ func saveStory(sess *dbr.Session, c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"status": "ok"})
   } else {
     res, _ := sess.InsertInto("stories").
-      Columns("title", "subtitle", "cover", "description", "meta_keywords", "meta_description").
-      Values(json.Title, json.Subtitle, json.Cover, json.Description, json.Keywords, json.MetaDescription).Exec()
+      Columns("title", "subtitle", "cover", "description", "meta_keywords", "meta_title", "meta_description").
+      Values(json.Title, json.Subtitle, json.Cover, json.Description, json.Keywords, json.MetaTitle, json.MetaDescription).Exec()
 
     id, _ := res.LastInsertId()
 

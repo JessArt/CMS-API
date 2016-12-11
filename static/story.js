@@ -188,6 +188,7 @@ $(function() {
         description: DATA.Description || '',
         cover: DATA.Cover || '',
         keywords: DATA.Keywords || '',
+        metaTitle: DATA.MetaTitle || '',
         metaDescription: DATA.MetaDescription || '',
         images: (DATA.Images || []).map(image => Object.assign({}, image, {
           new: false,
@@ -217,6 +218,7 @@ $(function() {
         </template>
         <vue-input label="Cover" v-model="cover" />
         <vue-input label="Meta Keywords" v-model="keywords" />
+        <vue-input label="Meta Title" v-model="metaTitle" />
         <vue-input label="Meta Description" v-model="metaDescription" />
         <ul id="example-1">
           <li v-for="image in images">
@@ -293,6 +295,7 @@ $(function() {
             description: this.description,
             cover: this.cover,
             keywords: this.keywords,
+            metaTitle: this.metaTitle,
             metaDescription: this.metaDescription,
             images: this.images.map((image, i) => Object.assign({}, image, {
               sort: i + 1
